@@ -1,0 +1,232 @@
+esphome:
+  name: tapedeck
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret ssid
+  password: !secret wappw
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "TapeDeck Fallback"
+    password: !secret hotspotpw
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret apipw
+
+ota:
+  password: !secret apipw
+
+globals:
+  id: tape_a_direction_reverse
+  type: bool
+  restore_value: false
+  initial_value: 'false'
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+text_sensor:
+  - platform: template
+    name: Tape A Direction
+    id: tape_a_direction
+    lambda: |-
+      if (id(tape_a_direction_reverse)) {
+        return {"Reverse"};
+      } else {
+        return {"Forward"};
+      }
+
+select:
+  - platform: template
+    name: Tape A Mode
+    id: tape_a_mode
+    options:
+      - Play Forward
+      - Play Reverse
+      - REC Forward
+      - REC Reverse
+      - Fast Forward
+      - Rewind
+      - Stop
+      - Pause
+    initial_option: Stop
+    optimistic: true
+    on_value:
+      then:
+        lambda: |-
+          if ( x == "Play Forward") {
+            id(tape_a_play_forward).press();
+          } else if ( x == "Play Reverse") {
+            id(tape_a_play_reverse).press();
+          } else if ( x == "Fast Forward") {
+            id(tape_a_ff).press();
+          } else if ( x == "Rewind") {
+            id(tape_a_rr).press();
+          } else if ( x == "Pause") {
+            id(tape_a_pause).press();
+          } else if ( x == "Stop") {
+            id(tape_a_stop).press();
+          } else if ( x == "REC Forward") {
+            id(tape_a_rec_forward).press();
+          } else if ( x == "REC Reverse") {
+            id(tape_a_rec_reverse).press();
+          }
+
+remote_receiver:
+  pin: 
+    number: D5
+    inverted: true
+  dump: all
+
+remote_transmitter:
+  pin: 
+    number: D2
+    inverted: false
+  carrier_duty_percent: 100%
+
+button:
+  - platform: template
+    internal: false
+    name: Tape A Play Current
+    id: tape_a_play_current
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape A Rec Current
+    id: tape_a_rec_current
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape A Command 45
+    id: tape_a_cmd_45
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200 ]
+  - platform: template
+    internal: false
+    name: Tape A Command 46
+    id: tape_a_cmd_46
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape A Play Forward
+    id: tape_a_play_forward
+    on_press:
+      then:
+        - lambda: id(tape_a_direction_reverse) = false;
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape A Stop
+    id: tape_a_stop
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200 ]
+  - platform: template
+    internal: true
+    id: tape_a_play_reverse
+    on_press:
+      then:
+        - lambda: id(tape_a_direction_reverse) = true;
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 1200 ]
+  - platform: template
+    internal: true
+    id: tape_a_ff
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 600 ]
+  - platform: template
+    internal: true
+    id: tape_a_rr
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200 ]
+  - platform: template
+    internal: true
+    id: tape_a_pause
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600 ]
+  - platform: template
+    internal: true
+    id: tape_a_rec_forward
+    on_press:
+      then:
+        - button.press: tape_a_play_forward
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+  - platform: template
+    internal: true
+    id: tape_a_rec_reverse
+    on_press:
+      then:
+        - button.press: tape_a_play_reverse
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+
+binary_sensor:
+  - platform: remote_receiver
+    id: status_tape_a_play
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600 ]
+    # on_press:
+    #   then:
+    #     - lambda: |-
+    #         if (id(tape_a_mode).state != "Play Forward") {
+    #           auto call = id(tape_a_mode).make_call();
+    #           call.set_option("Play Forward");
+    #           call.perform();
+    #         }
+  - platform: remote_receiver
+    id: status_tape_a_stop
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200 ]
+    on_press:
+      then:
+        - lambda: |-
+            if (id(tape_a_mode).state != "Stop") {
+              auto call = id(tape_a_mode).make_call();
+              call.set_option("Stop");
+              call.perform();
+            }
+  - platform: remote_receiver
+    id: status_tape_a_pause
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600 ]
+    on_press:
+      then:
+        - lambda: |-
+            if (id(tape_a_mode).state != "Pause") {
+              auto call = id(tape_a_mode).make_call();
+              call.set_option("Pause");
+              call.perform();
+            }
