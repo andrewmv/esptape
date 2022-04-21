@@ -1,0 +1,74 @@
+  - platform: onkyo
+    host: 192.168.1.36
+    name: receiver
+    receiver_max_volume: 100
+  - platform: universal
+    name: Sony Tape Deck A
+    id: sony_tape_deck_a
+    children: media_player.receiver
+    state_template: >
+      {% if is_state('switch.tape_deck', 'unavailable') or is_state('switch.tape_deck', 'on') %}
+        on
+      {% else %}
+        off
+      {% endif %}
+    commands:
+      turn_on:
+        service: script.tape
+      turn_off: 
+        service: script.tape_off
+      media_play:
+        service: button.press
+        target:
+          entity_id: button.tape_a_play
+      media_pause:
+        service: button.press
+        target:
+          entity_id: button.tape_a_pause
+      media_stop:
+        service: button.press
+        target:
+          entity_id: button.tape_a_stop
+      media_next_track:
+        service: button.press
+        target:
+          entity_id: button.tape_a_ff
+      media_previous_track:
+        service: button.press
+        target:
+          entity_id: button.tape_a_rr
+  - platform: universal
+    name: Sony Tape Deck B
+    id: sony_tape_deck_b
+    children: media_player.receiver
+    state_template: >
+      {% if is_state('switch.tape_deck', 'unavailable') or is_state('switch.tape_deck', 'on') %}
+        on
+      {% else %}
+        off
+      {% endif %}
+    commands:
+      turn_on:
+        service: script.tape
+      turn_off: 
+        service: script.tape_off
+      media_play:
+        service: button.press
+        target:
+          entity_id: button.tape_b_play
+      media_pause:
+        service: button.press
+        target:
+          entity_id: button.tape_b_pause
+      media_stop:
+        service: button.press
+        target:
+          entity_id: button.tape_b_stop
+      media_next_track:
+        service: button.press
+        target:
+          entity_id: button.tape_b_ff
+      media_previous_track:
+        service: button.press
+        target:
+          entity_id: button.tape_b_rr
