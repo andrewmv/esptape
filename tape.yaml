@@ -1,7 +1,24 @@
+# 2022-04 andrewmv@gmail.com
+#
+# ESPHome Controller for Sony TC-WE475 Dual Tape Deck, using the A1
+# Command and control protocol
+#
+# Hardware: 3.3V to 5V output level shifter on D2, connected to mono jack tip
+# 5V to 3.3V input level shifter on D5, connected to mono jack tip
+# GND connected to mono jack base
+
 esphome:
   name: tapedeck
   platform: ESP8266
   board: nodemcuv2
+  on_boot:
+    then:
+      - lambda: |-
+          id(tape_a_direction).publish_state("Forward");
+          id(tape_a_mode).publish_state("Stopped");
+          id(tape_b_direction).publish_state("Forward");
+          id(tape_b_mode).publish_state("Stopped");
+          // id(active_tape).publish_state("A");
 
 wifi:
   ssid: !secret ssid
@@ -24,69 +41,50 @@ api:
 ota:
   password: !secret apipw
 
-globals:
-  id: tape_a_direction_reverse
-  type: bool
-  restore_value: false
-  initial_value: 'false'
-
 status_led:
   pin:
     number: GPIO2
     inverted: true
 
 text_sensor:
+    # Tape direction sensors are best-guess only, so we'll try to use idempotent
+    # commands on the front end. Interactions with the deck's physical controls
+    # which change tape direction are not reported out via status commands
   - platform: template
     name: Tape A Direction
     id: tape_a_direction
-    lambda: |-
-      if (id(tape_a_direction_reverse)) {
-        return {"Reverse"};
-      } else {
-        return {"Forward"};
-      }
+    icon: "mdi:arrow-left-right-bold"
+  - platform: template
+    name: Tape A Mode 
+    id: tape_a_mode 
+  - platform: template
+    name: Tape B Direction
+    id: tape_b_direction
+    icon: "mdi:arrow-left-right-bold"
+  - platform: template
+    name: Tape B Mode 
+    id: tape_b_mode 
+  # - platform: template
+  #   name: Active Tape
+  #   id: active_tape
+  #   icon: "mdi:cassette"
 
 select:
   - platform: template
-    name: Tape A Mode
-    id: tape_a_mode
-    options:
-      - Play Forward
-      - Play Reverse
-      - REC Forward
-      - REC Reverse
-      - Fast Forward
-      - Rewind
-      - Stop
-      - Pause
-    initial_option: Stop
+    name: Active Tape
+    id: active_tape
+    icon: "mdi:cassette"
     optimistic: true
-    on_value:
-      then:
-        lambda: |-
-          if ( x == "Play Forward") {
-            id(tape_a_play_forward).press();
-          } else if ( x == "Play Reverse") {
-            id(tape_a_play_reverse).press();
-          } else if ( x == "Fast Forward") {
-            id(tape_a_ff).press();
-          } else if ( x == "Rewind") {
-            id(tape_a_rr).press();
-          } else if ( x == "Pause") {
-            id(tape_a_pause).press();
-          } else if ( x == "Stop") {
-            id(tape_a_stop).press();
-          } else if ( x == "REC Forward") {
-            id(tape_a_rec_forward).press();
-          } else if ( x == "REC Reverse") {
-            id(tape_a_rec_reverse).press();
-          }
+    options:
+      - A
+      - B
+    initial_option: A
 
 remote_receiver:
   pin: 
     number: D5
     inverted: true
-  dump: all
+  dump: raw
 
 remote_transmitter:
   pin: 
@@ -95,115 +93,237 @@ remote_transmitter:
   carrier_duty_percent: 100%
 
 button:
+  ### Deck A Buttons ###
   - platform: template
     internal: false
-    name: Tape A Play Current
-    id: tape_a_play_current
+    name: Tape A Play
+    id: tape_a_play
+    icon: "mdi:play"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600 ]
   - platform: template
     internal: false
-    name: Tape A Rec Current
-    id: tape_a_rec_current
+    name: Tape A RECORD
+    id: tape_a_rec
+    icon: "mdi:record"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
   - platform: template
     internal: false
-    name: Tape A Command 45
-    id: tape_a_cmd_45
+    name: Tape A CUE
+    id: tape_a_cue
+    icon: "mdi:record-rec"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
-            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200 ]
-  - platform: template
-    internal: false
-    name: Tape A Command 46
-    id: tape_a_cmd_46
-    on_press:
-      then:
-        - remote_transmitter.transmit_raw:
-            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600 ]
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 1200 ]
   - platform: template
     internal: false
     name: Tape A Play Forward
     id: tape_a_play_forward
+    icon: "mdi:step-forward"
     on_press:
       then:
-        - lambda: id(tape_a_direction_reverse) = false;
+        - lambda: id(tape_a_direction).publish_state("Forward");
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600 ]
   - platform: template
     internal: false
     name: Tape A Stop
     id: tape_a_stop
+    icon: "mdi:stop"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200 ]
   - platform: template
-    internal: true
+    internal: false
+    name: Tape A Play Reverse
     id: tape_a_play_reverse
+    icon: "mdi:step-backward"
     on_press:
       then:
-        - lambda: id(tape_a_direction_reverse) = true;
+        - lambda: id(tape_a_direction).publish_state("Reverse");
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 1200 ]
   - platform: template
-    internal: true
+    internal: false
+    name: Tape A Fast Forward
     id: tape_a_ff
+    icon: "mdi:fast-forward"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 600 ]
   - platform: template
-    internal: true
+    internal: false
+    name: Tape A Rewind
     id: tape_a_rr
+    icon: "mdi:rewind"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200 ]
   - platform: template
-    internal: true
+    internal: false
+    name: Tape A Pause
     id: tape_a_pause
+    icon: "mdi:pause"
     on_press:
       then:
         - remote_transmitter.transmit_raw:
             code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600 ]
   - platform: template
-    internal: true
+    internal: false
+    name: Tape A RECORD Forward
     id: tape_a_rec_forward
+    icon: "mdi:record"
     on_press:
       then:
+        # Cue up recording
+        - button.press: tape_a_cue
+        - delay: 250ms
+        # Set recording direction
         - button.press: tape_a_play_forward
-        - remote_transmitter.transmit_raw:
-            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+        - delay: 250ms
+        # Start recording
+        - button.press: tape_a_play_forward
   - platform: template
-    internal: true
+    internal: false
+    name: Tape A RECORD Reverse
     id: tape_a_rec_reverse
+    icon: "mdi:record"
     on_press:
       then:
+        - button.press: tape_a_cue
+        - delay: 1s
         - button.press: tape_a_play_reverse
+  ### Deck B Buttons ###
+  - platform: template
+    internal: false
+    name: Tape B Play
+    id: tape_b_play
+    icon: "mdi:play"
+    on_press:
+      then:
         - remote_transmitter.transmit_raw:
-            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape B RECORD
+    id: tape_b_rec
+    icon: "mdi:record"
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape B CUE
+    id: tape_b_cue
+    icon: "mdi:record-rec"
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 1200 ]
+  - platform: template
+    internal: false
+    name: Tape B Play Forward
+    id: tape_b_play_forward
+    icon: "mdi:step-forward"
+    on_press:
+      then:
+        - lambda: id(tape_b_direction).publish_state("Forward");
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape B Stop
+    id: tape_b_stop
+    icon: "mdi:stop"
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200 ]
+  - platform: template
+    internal: false
+    name: Tape B Play Reverse
+    id: tape_b_play_reverse
+    icon: "mdi:step-backward"
+    on_press:
+      then:
+        - lambda: id(tape_b_direction).publish_state("Reverse");
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 1200 ]
+  - platform: template
+    internal: false
+    name: Tape B Fast Forward
+    id: tape_b_ff
+    icon: "mdi:fast-forward"
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape B Rewind
+    id: tape_b_rr
+    icon: "mdi:rewind"
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200 ]
+  - platform: template
+    internal: false
+    name: Tape B Pause
+    id: tape_b_pause
+    icon: "mdi:pause"
+    on_press:
+      then:
+        - remote_transmitter.transmit_raw:
+            code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600 ]
+  - platform: template
+    internal: false
+    name: Tape B RECORD Forward
+    id: tape_b_rec_forward
+    icon: "mdi:record"
+    on_press:
+      then:
+        - button.press: tape_b_cue
+        - delay: 250ms 
+        - button.press: tape_b_play_forward
+        - delay: 250ms 
+        - button.press: tape_b_play_forward
+  - platform: template
+    internal: false
+    name: Tape B RECORD Reverse
+    id: tape_b_rec_reverse
+    icon: "mdi:record"
+    on_press:
+      then:
+        - button.press: tape_b_cue
+        - delay: 1s
+        - button.press: tape_b_play_reverse
 
 binary_sensor:
+  ### Tape A Sensors ###
   - platform: remote_receiver
     id: status_tape_a_play
     internal: true
     raw:
       code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600 ]
-    # on_press:
-    #   then:
-    #     - lambda: |-
-    #         if (id(tape_a_mode).state != "Play Forward") {
-    #           auto call = id(tape_a_mode).make_call();
-    #           call.set_option("Play Forward");
-    #           call.perform();
-    #         }
+    on_press:
+      then:
+        - lambda: |-
+            id(tape_a_mode).publish_state("Playing");
+            // id(active_tape).publish_state("A");
+            auto call = id(active_tape).make_call();
+            call.set_option("A");
+            call.perform();
   - platform: remote_receiver
     id: status_tape_a_stop
     internal: true
@@ -211,12 +331,7 @@ binary_sensor:
       code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200 ]
     on_press:
       then:
-        - lambda: |-
-            if (id(tape_a_mode).state != "Stop") {
-              auto call = id(tape_a_mode).make_call();
-              call.set_option("Stop");
-              call.perform();
-            }
+        - lambda: id(tape_a_mode).publish_state("Stopped");
   - platform: remote_receiver
     id: status_tape_a_pause
     internal: true
@@ -224,9 +339,158 @@ binary_sensor:
       code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600 ]
     on_press:
       then:
+        - lambda: id(tape_a_mode).publish_state("Paused");
+  - platform: remote_receiver
+    id: status_tape_a_eject
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200 ]
+    on_press:
+      then:
+        # If we eject Tape A while Tape B is still inserted, B is now the active tape
         - lambda: |-
-            if (id(tape_a_mode).state != "Pause") {
-              auto call = id(tape_a_mode).make_call();
-              call.set_option("Pause");
+            id(tape_a_mode).publish_state("No Tape");
+            if(id(tape_b_mode).state != "No Tape") {
+              // id(active_tape).publish_state("B");
+              auto call = id(active_tape).make_call();
+              call.set_option("B");
               call.perform();
             }
+  - platform: remote_receiver
+    id: status_tape_a_insert
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
+    on_press:
+      then:
+        - lambda: id(tape_a_mode).publish_state("Stopped");
+    ## This will always be followed by the appropriate Stop and Play updates,
+    ## So we only need to worry about updating direction, if it's known
+  - platform: remote_receiver
+    id: status_tape_a_autorev
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600 ]
+    on_press:
+      then:
+        - lambda: |-
+            if (id(tape_a_direction).state == "Forward") {
+              id(tape_a_direction).publish_state("Reverse");
+            } else if (id(tape_a_direction).state == "Reverse") {
+              id(tape_a_direction).publish_state("Forward");
+            }
+  - platform: remote_receiver
+    id: status_tape_a_cue
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 1200 ]
+    on_press:
+      then:
+        - lambda: id(tape_a_mode).publish_state("Cued");
+  - platform: remote_receiver
+    id: status_tape_a_rec
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
+    on_press:
+      then:
+        - lambda: id(tape_a_mode).publish_state("Recording");
+    # Decoding this will make the logs easier to read, but it has no effect on our state machine,
+    # so we won't take any action
+  - platform: remote_receiver
+    id: status_tape_a_end
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 600 ]
+  ### Tape B Sensors ###
+  - platform: remote_receiver
+    id: status_tape_b_play
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600 ]
+    on_press:
+      then:
+        - lambda: |-
+            id(tape_b_mode).publish_state("Playing");
+            //id(active_tape).publish_state("B");
+            auto call = id(active_tape).make_call();
+            call.set_option("B");
+            call.perform();
+  - platform: remote_receiver
+    id: status_tape_b_stop
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200 ]
+    on_press:
+      then:
+        - lambda: id(tape_b_mode).publish_state("Stopped");
+  - platform: remote_receiver
+    id: status_tape_b_pause
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600 ]
+    on_press:
+      then:
+        - lambda: id(tape_b_mode).publish_state("Paused");
+  - platform: remote_receiver
+    id: status_tape_b_eject
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200 ]
+    on_press:
+      then:
+        # If we eject Tape B while Tape A is still inserted, A is now the active tape
+        - lambda: |-
+            id(tape_b_mode).publish_state("No Tape");
+            if(id(tape_a_mode).state != "No Tape") {
+              //id(active_tape).publish_state("A");
+              auto call = id(active_tape).make_call();
+              call.set_option("A");
+              call.perform();              
+            }
+  - platform: remote_receiver
+    id: status_tape_b_insert
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
+    on_press:
+      then:
+        - lambda: id(tape_b_mode).publish_state("Stopped");
+    ## This will always be followed by the appropriate Stop and Play updates,
+    ## So we only need to worry about updating direction, if it's known
+  - platform: remote_receiver
+    id: status_tape_b_autorev
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 600 ]
+    on_press:
+      then:
+        - lambda: |-
+            if (id(tape_b_direction).state == "Forward") {
+              id(tape_b_direction).publish_state("Reverse");
+            } else if (id(tape_b_direction).state == "Reverse") {
+              id(tape_b_direction).publish_state("Forward");
+            }
+  - platform: remote_receiver
+    id: status_tape_b_cue
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 1200, -600, 1200 ]
+    on_press:
+      then:
+        - lambda: id(tape_b_mode).publish_state("Cued");
+  - platform: remote_receiver
+    id: status_tape_b_rec
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
+    on_press:
+      then:
+        - lambda: id(tape_b_mode).publish_state("Recording");
+    # Decoding this will make the logs easier to read, but it has no effect on our state machine,
+    # so we won't take any action
+  - platform: remote_receiver
+    id: status_tape_b_end
+    internal: true
+    raw:
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 600 ]
