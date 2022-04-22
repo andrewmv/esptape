@@ -1,0 +1,98 @@
+type: vertical-stack
+cards:
+  - type: conditional
+    conditions:
+      - entity: select.active_tape
+        state: A
+    card:
+      type: vertical-stack
+      cards:
+        - type: media-control
+          entity: media_player.sony_tape_deck_a
+        - type: horizontal-stack
+          cards:
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: call-service
+                service: select.select_option
+                service_data:
+                  option: B
+                target:
+                  entity_id: select.active_tape
+              icon: mdi:alpha-a
+              name: Active Tape
+            - type: entity
+              entity: sensor.tape_a_direction
+              icon: mdi:arrow-left-right-bold
+        - type: horizontal-stack
+          cards:
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: button.tape_a_play_reverse
+              icon: mdi:step-backward
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: button.tape_a_record
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: button.tape_a_play_forward
+              icon: mdi:step-forward
+  - type: conditional
+    conditions:
+      - entity: select.active_tape
+        state: B
+    card:
+      type: vertical-stack
+      cards:
+        - type: media-control
+          entity: media_player.sony_tape_deck_b
+        - type: horizontal-stack
+          cards:
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: call-service
+                service: select.select_option
+                service_data:
+                  option: A
+                target:
+                  entity_id: select.active_tape
+              icon: mdi:alpha-b
+              name: Active Tape
+            - type: entity
+              entity: sensor.tape_b_direction
+              icon: mdi:arrow-left-right-bold
+        - type: horizontal-stack
+          cards:
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: button.tape_b_play_reverse
+              icon: mdi:step-backward
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: button.tape_b_record
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: button.tape_b_play_forward
+              icon: mdi:step-forward
