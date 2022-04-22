@@ -2,73 +2,109 @@
     host: 192.168.1.36
     name: receiver
     receiver_max_volume: 100
-  - platform: universal
-    name: Sony Tape Deck A
-    id: sony_tape_deck_a
-    children: media_player.receiver
-    state_template: >
-      {% if is_state('switch.tape_deck', 'unavailable') or is_state('switch.tape_deck', 'on') %}
-        on
-      {% else %}
-        off
-      {% endif %}
-    commands:
-      turn_on:
-        service: script.tape
-      turn_off: 
-        service: script.tape_off
-      media_play:
-        service: button.press
-        target:
-          entity_id: button.tape_a_play
-      media_pause:
-        service: button.press
-        target:
-          entity_id: button.tape_a_pause
-      media_stop:
-        service: button.press
-        target:
-          entity_id: button.tape_a_stop
-      media_next_track:
-        service: button.press
-        target:
-          entity_id: button.tape_a_ff
-      media_previous_track:
-        service: button.press
-        target:
-          entity_id: button.tape_a_rr
-  - platform: universal
-    name: Sony Tape Deck B
-    id: sony_tape_deck_b
-    children: media_player.receiver
-    state_template: >
-      {% if is_state('switch.tape_deck', 'unavailable') or is_state('switch.tape_deck', 'on') %}
-        on
-      {% else %}
-        off
-      {% endif %}
-    commands:
-      turn_on:
-        service: script.tape
-      turn_off: 
-        service: script.tape_off
-      media_play:
-        service: button.press
-        target:
-          entity_id: button.tape_b_play
-      media_pause:
-        service: button.press
-        target:
-          entity_id: button.tape_b_pause
-      media_stop:
-        service: button.press
-        target:
-          entity_id: button.tape_b_stop
-      media_next_track:
-        service: button.press
-        target:
-          entity_id: button.tape_b_ff
-      media_previous_track:
-        service: button.press
-        target:
-          entity_id: button.tape_b_rr
+  - platform: media_player_template
+    media_players:
+      sony_tape_deck_a:
+        friendly_name: Sony Tape Deck A
+        # "playing" and "paused" are the only media player states in which transport
+        # controls are presented to the user, so we'll reporting the
+        # state as playing/paused as long as the deck is switched on and has
+        # a tape in. More detailed state is available as sensor.tape_a_mode
+        value_template: >
+          {% if is_state('switch.tape_deck', 'off') %}
+            off
+          {% elif is_state('sensor.tape_a_mode', 'No Tape') %}
+            idle
+          {% elif is_state('sensor.tape_a_mode', 'Playing') %}
+            playing
+          {% elif is_state('sensor.tape_a_mode', 'RECORDING') %}
+            playing
+          {% else %} 
+            paused
+          {% endif %}
+        title_template: "{{ states('sensor.tape_a_mode') }}"
+        turn_on:
+          service: script.tape
+        turn_off: 
+          service: script.tape_off
+        volume_up:
+          service: media_player.volume_up
+          target:
+            entity_id: media_player.receiver
+        volume_down:
+          service: media_player.volume_down
+          target:
+            entity_id: media_player.receiver
+        play:
+          service: button.press
+          target:
+            entity_id: button.tape_a_play
+        pause:
+          service: button.press
+          target:
+            # The media player card doesn't offer a stop button, and there's little 
+            # automation use for the pause function, so we'll map pause to stop for
+            # simplicity.
+            # button.tape_a_pause can still be called if desired.
+            #entity_id: button.tape_a_pause
+            entity_id: button.tape_a_stop
+        stop:
+          service: button.press
+          target:
+            entity_id: button.tape_a_stop
+        next:
+          service: button.press
+          target:
+            entity_id: button.tape_a_fast_forward
+        previous:
+          service: button.press
+          target:
+            entity_id: button.tape_a_rewind
+      sony_tape_deck_b:
+        friendly_name: Sony Tape Deck B
+        value_template: >
+          {% if is_state('switch.tape_deck', 'off') %}
+            off
+          {% elif is_state('sensor.tape_b_mode', 'No Tape') %}
+            idle
+          {% elif is_state('sensor.tape_b_mode', 'Playing') %}
+            playing
+          {% elif is_state('sensor.tape_b_mode', 'RECORDING') %}
+            playing
+          {% else %} 
+            paused
+          {% endif %}
+        title_template: "{{ states('sensor.tape_b_mode') }}"
+        turn_on:
+          service: script.tape
+        turn_off: 
+          service: script.tape_off
+        volume_up:
+          service: media_player.volume_up
+          target:
+            entity_id: media_player.receiver
+        volume_down:
+          service: media_player.volume_down
+          target:
+            entity_id: media_player.receiver
+        play:
+          service: button.press
+          target:
+            entity_id: button.tape_b_play
+        pause:
+          service: button.press
+          target:
+            #entity_id: button.tape_b_pause
+            entity_id: button.tape_b_stop
+        stop:
+          service: button.press
+          target:
+            entity_id: button.tape_b_stop
+        next:
+          service: button.press
+          target:
+            entity_id: button.tape_b_fast_forward
+        previous:
+          service: button.press
+          target:
+            entity_id: button.tape_b_rewind
