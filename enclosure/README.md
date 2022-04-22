@@ -1,4 +1,6 @@
-OpenSCAD source files and rendered STLs for printable PCB enclosure
+OpenSCAD source files and rendered STLs for printable PCB enclosure.
+
+Designed to use M2 x 3.5mm threaded brass inserts
 
 ## Print Settings
 

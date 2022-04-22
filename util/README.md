@@ -24,4 +24,4 @@ Example:
 
 ## a1_rs232_bridge.ino
 
-An Arduino sketch for code scanning and discovery
+An Arduino sketch for code scanning and discovery. Should support any 5V tolerant target board.
