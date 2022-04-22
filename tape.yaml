@@ -344,7 +344,7 @@ binary_sensor:
     id: status_tape_a_eject
     internal: true
     raw:
-      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200 ]
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 1200 ]
     on_press:
       then:
         # If we eject Tape A while Tape B is still inserted, B is now the active tape
@@ -360,7 +360,7 @@ binary_sensor:
     id: status_tape_a_insert
     internal: true
     raw:
-      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
     on_press:
       then:
         - lambda: id(tape_a_mode).publish_state("Stopped");
@@ -391,10 +391,10 @@ binary_sensor:
     id: status_tape_a_rec
     internal: true
     raw:
-      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
+      code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
     on_press:
       then:
-        - lambda: id(tape_a_mode).publish_state("Recording");
+        - lambda: id(tape_a_mode).publish_state("RECORDING");
     # Decoding this will make the logs easier to read, but it has no effect on our state machine,
     # so we won't take any action
   - platform: remote_receiver
@@ -455,7 +455,7 @@ binary_sensor:
       code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600, -600, 600 ]
     on_press:
       then:
-        - lambda: id(tape_b_mode).publish_state("Stopped");
+        - lambda: id(tape_b_mode).publish_state("Idle");
     ## This will always be followed by the appropriate Stop and Play updates,
     ## So we only need to worry about updating direction, if it's known
   - platform: remote_receiver
@@ -486,7 +486,7 @@ binary_sensor:
       code: [ 2400, -600, 1200, -600, 600, -600, 1200, -600, 600, -600, 1200, -600, 1200, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 600, -600, 1200, -600, 600, -600, 600 ]
     on_press:
       then:
-        - lambda: id(tape_b_mode).publish_state("Recording");
+        - lambda: id(tape_b_mode).publish_state("RECORDING");
     # Decoding this will make the logs easier to read, but it has no effect on our state machine,
     # so we won't take any action
   - platform: remote_receiver
