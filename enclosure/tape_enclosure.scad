@@ -2,7 +2,7 @@ xdim = 45.39;
 ydim = 53.33;
 
 label1 = "A1 Bridge";
-label2 = "v1.0 2022-04";
+label2 = "v1.1 2022-04";
 
 screw_pos = [
     [3.81, 3.81],
@@ -88,29 +88,29 @@ module base() {
 }
 
 module ledge() {
-    xt = -ledge_t;
-    yt = -ledge_t;
-    xs = xdim + (2 * ledge_t);
-    ys = ydim + (2 * ledge_t);
+    xt = ledge_t;
+    yt = ledge_t;
+    xs = xdim - (2 * ledge_t);
+    ys = ydim - (2 * ledge_t);
     zs = base_h + ledge_h;
     difference() {
+        cube(size=[xdim, ydim, zs]);
         translate([xt, yt, 0])
-            cube(size=[xs, ys, zs]);
-        cube(size=[xdim, ydim, 10]);
+            cube(size=[xs, ys, 10]);
     } 
 }
 
 module wall() {
-    xt = -ledge_t - wall_t;
-    yt = -ledge_t - wall_t;
-    xs = xdim + (2 * ledge_t) + (2 * wall_t);
-    ys = ydim + (2 * ledge_t) + (2 * wall_t);
+    xt = -wall_t;
+    yt = -wall_t;
+    xs = xdim + (2 * wall_t);
+    ys = ydim + (2 * wall_t);
     zs = base_h + ledge_t + wall_t;
     difference() {
         translate([xt, yt, 0])
             cube(size=[xs, ys, zs]);
-        translate([-ledge_t, -ledge_t, 0])
-            cube(size=[xdim + (2 * ledge_t), ydim + (2 * ledge_t), 10]);
+        translate([0, 0, 0])
+            cube(size=[xdim, ydim, 10]);
     }
 }
 
@@ -129,8 +129,8 @@ module mounting_stem() {
 
 module cuts() {
     // bottom cuts
-    yt = -wall_t - ledge_t - 1;
-    xt = -ledge_t;
+    yt = -wall_t - 1;
+    xt = 0;
     zt = base_h + ledge_h;
     translate([xt, yt, zt]) {
         for (i = [0:len(bottom_cuts)-1]) {
@@ -140,7 +140,7 @@ module cuts() {
         }
     }
     // top cuts
-    yt2 = ydim + ledge_t - 1;
+    yt2 = ydim - 1;
     translate([xt, yt2, zt]) {
         for (i = [0:len(top_cuts)-1]) {
             translate([top_cuts[i][0], 0, 0]) {
