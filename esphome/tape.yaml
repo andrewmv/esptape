@@ -82,7 +82,7 @@ select:
 
 remote_receiver:
   pin: 
-    number: D5
+    number: D1
     inverted: true
   dump: raw
 
