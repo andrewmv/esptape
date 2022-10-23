@@ -41,10 +41,17 @@ api:
 ota:
   password: !secret apipw
 
-status_led:
-  pin:
-    number: GPIO2
+# status_led:
+#   pin:
+#     number: GPIO2
+#     inverted: true
+
+# Pull blue LED high to turn it off
+output:
+  - platform: gpio 
+    pin: GPIO2
     inverted: true
+    id: status_led
 
 text_sensor:
     # Tape direction sensors are best-guess only, so we'll try to use idempotent
