@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python2
 
 # Convert Sony A1 codes to ESPHome timing lists
 
